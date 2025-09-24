@@ -27,6 +27,7 @@ dist-ssr
 # Vite
 dist/
 .vite/
+coverage/
 *.local
 
 # OS / IDE
