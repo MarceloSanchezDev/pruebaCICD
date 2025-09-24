@@ -35,6 +35,16 @@ jobs:
 
       - name: 🧪 Tests (Vitest)
         run: npm run test:ci --if-present
+      # --- Seguridad: auditoría no bloqueante (reporte) ---
+      - name: 🔒 Auditoría (reporte no bloqueante)
+        run: |
+          npm audit --omit=dev --json > audit.json || true
+      - name: 📎 Subir reporte npm-audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: audit.json
+          if-no-files-found: error
 
       - name: 🏗️ Build
         run: npm run build
