@@ -2,9 +2,9 @@ name: CI + Preview (Vite + Vercel)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -41,6 +41,10 @@ jobs:
     needs: build
     if: github.event_name == 'pull_request' && needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
