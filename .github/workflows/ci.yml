@@ -1,11 +1,17 @@
-name: CI + Preview (Vite + Vercel)
+name: CI + Preview + Prod (Vite + Vercel)
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
+
+# Permisos (necesarios para comentar en PR con el preview)
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   build:
@@ -73,7 +79,7 @@ jobs:
         run: vercel build --token="$VERCEL_TOKEN"
 
       - name: 🚀 Deploy prebuilt (preview)
-        id: vercel
+        id: vercel_preview
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
@@ -81,9 +87,58 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: 📝 Comentar URL en el PR
-        if: steps.vercel.outputs.url != ''
+        if: steps.vercel_preview.outputs.url != ''
         uses: marocchino/sticky-pull-request-comment@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           message: |
-            ✅ **Preview listo**: ${{ steps.vercel.outputs.url }}
+            ✅ **Preview listo**: ${{ steps.vercel_preview.outputs.url }}
             _Este comentario se actualizará en cada push del PR._
+
+  production:
+    name: Deploy a Producción (main)
+    needs: build
+    if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    # Esto crea/usa el environment "production" y muestra la URL en la UI de Deployments
+    environment:
+      name: production
+      url: ${{ steps.vercel_prod.outputs.url }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      - name: ⬇️ Instalar Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: 🧩 Vercel pull (prod)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: 🏗️ Build con Vercel (prod)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: 🚀 Deploy prebuilt (prod)
+        id: vercel_prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: 📣 Mostrar URL de producción
+        run: echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
