@@ -137,4 +137,6 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: 📣 Mostrar URL de producción
-        run: echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
+        run: |
+          echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
+
