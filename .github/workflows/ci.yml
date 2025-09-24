@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Permisos (necesarios para comentar en PR con el preview)
+# Permisos para comentar en PR
 permissions:
   contents: read
   pull-requests: write
@@ -101,10 +101,6 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
     runs-on: ubuntu-latest
-    # Esto crea/usa el environment "production" y muestra la URL en la UI de Deployments
-    environment:
-      name: production
-      url: ${{ steps.vercel_prod.outputs.url }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -141,4 +137,6 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: 📣 Mostrar URL de producción
-        run: echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
+        run: |
+          echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
+
