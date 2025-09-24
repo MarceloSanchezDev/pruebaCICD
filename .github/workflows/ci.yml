@@ -2,9 +2,9 @@ name: CI + Preview + Prod (Vite + Vercel)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 # Permisos para comentar en PR
@@ -30,6 +30,11 @@ jobs:
 
       - name: 📦 Instalar dependencias
         run: npm ci
+      - name: 🧹 Lint
+        run: npm run lint --if-present
+
+      - name: 🧪 Tests (Vitest)
+        run: npm run test:ci --if-present
 
       - name: 🏗️ Build
         run: npm run build
@@ -139,4 +144,3 @@ jobs:
       - name: 📣 Mostrar URL de producción
         run: |
           echo "URL de producción: ${{ steps.vercel_prod.outputs.url }}"
-
